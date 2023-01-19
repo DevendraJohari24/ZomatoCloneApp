@@ -1,59 +1,55 @@
-import express from 'express';
+import express from "express";
 
-// Database Schema
-import { ReviewModel } from '../../database/allModel';
+// Database Modals
+import { ReviewModal } from "../../database/AllModals";
 
 const Router = express.Router();
 
-/*
-Route       /review/:resid
-Des         
-Paras
-Access
-Method
+Router.get("/:type/:reviewID", async (req, res) => {
+  try {
+    const { type, reviewID } = req.params;
+    const getReviews = await ReviewModal.find({ [type]: reviewID });
+    if (!getReviews) return res.json({ review: [] });
 
-*/
-
-Router.get("/:resid", async(req, res)=>{
-    try{
-        const {resid} = req.params;
-        const reviews = await ReviewModel.find({restaurant: resid});
-        return res.json({reviews});
-    }
-    catch(error){
-        return res.status(500).json({error: error.message})
-    }
+    return res.json({ review: getReviews });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
 });
 
-/*
-Adding a Review
-*/
+Router.get("/:type/:reviewID/:userID", async (req, res) => {
+  try {
+    const { type, reviewID, userID } = req.params;
+    const getReviews = await ReviewModal.find({
+      [type]: reviewID,
+      user: userID,
+    });
+    if (!getReviews) return res.json({ review: [] });
 
-Router.post("/new", async(req, res)=>{
-    try{
-        const {reviewData} = req.body;
-
-        await ReviewModel.create({...reviewData});
-        return res.json({review: "Successfully Created Review"});
-    }
-    catch(error){
-        return res.status(500).json({error: error.message});
-    }
+    return res.json({ review: getReviews });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
 });
 
-/*
-Delete review
-*/
+Router.post("/new", async (req, res) => {
+  try {
+    const { reviewData } = req.body;
+    const newReview = await ReviewModal.create(reviewData);
+    return res.json({ review: newReview });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+});
 
-Router.delete("/delete/:_id", async(req, res)=>{
-    try{
-        const {_id} = req.params;
-        await ReviewModel.findByIdAndDelete(_id);
-        return res.json({review: "Successfully Deleted the Review"});
-    }
-    catch(error){
-        return res.json(500).json({error: error.message});
-    }
+Router.delete("/delete", async (req, res) => {
+  try {
+    const { reviewData } = req.body;
+    const deleteReview = await ReviewModal.findByIdAndDelete(reviewData._id);
+    return res.json({ review: Boolean(deleteReview) });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
 });
 
 export default Router;

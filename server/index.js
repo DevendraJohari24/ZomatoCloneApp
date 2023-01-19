@@ -1,52 +1,56 @@
-require('dotenv').config();
-import express from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
-import passport from 'passport';
+// importing all the environment variables
+require("dotenv").config();
 
-// configs
-import googleAuthConfig from './config/google.config';
+// importing libraries
+import express from "express";
+require("express-async-errors");
+import cors from "cors";
+import helmet from "helmet";
+import passport from "passport";
 
-// Routes
-import Auth from "./API/Auth/index";
-import Restaurant from './API/Restaurant/index';
-import Food from './API/Food/index';
-import Menu from './API/Menu/index';
-import Image from './API/Image/index';
-import Order from './API/Orders/index';
-import Review from './API/Reviews/index';
-import User from './API/User/index';
+// Databse connection
+import ConnectDB from "./database/connection";
 
-// Database Connections
-import ConnectDB from './database/connection';
+// Configs
+import googleAuthConfig from "./configs/google-passport.config";
+import routeAuthConfig from "./configs/routes-passport.config";
 
-// passport config
+// importing microservices route
+import Restaurant from "./API/restaurants/";
+import Auth from "./API/auth";
+import Foods from "./API/foods";
+import Images from "./API/images";
+import Menu from "./API/menu";
+
+// Initializing express application
+const ZomatoApp = express();
+
+// application middleware
+ZomatoApp.use(helmet());
+ZomatoApp.use(express.urlencoded({ extended: false }));
+ZomatoApp.use(express.json());
+ZomatoApp.use(cors());
+ZomatoApp.use(passport.initialize());
+ZomatoApp.use(passport.session());
+
+// Passport Config
 googleAuthConfig(passport);
+routeAuthConfig(passport);
 
+// Application Route Middleware
+ZomatoApp.use("/restaurants", Restaurant);
+ZomatoApp.use("/auth", Auth);
+ZomatoApp.use("/foods", Foods);
+ZomatoApp.use("/images", Images);
+ZomatoApp.use("/menu", Menu);
 
-const zomato = express();
-zomato.use(cors());
-zomato.use(express.json());
-zomato.use(helmet());
-zomato.use(passport.initialize());
-
-zomato.get("/", (req, res) => {
-    res.json({message: "Setup Success"});
+// 404 route
+ZomatoApp.get("/", (req, res) => {
+  res.json({ error: "Invalid Route" });
 });
 
-zomato.use("/auth", Auth);
-zomato.use("/restaurant", Restaurant);
-zomato.use("/food", Food);
-zomato.use("/menu", Menu);
-zomato.use("/image", Image);
-zomato.use("/order", Order);
-zomato.use("/review", Review);
-zomato.use("/user", User);
-
-zomato.listen(4000, ()=> 
-    ConnectDB()
-        .then(()=> console.log("Server is up and running."))
-        .catch(()=> console.log("Server is up and running but database connection failed"))
+// Specifying the port to run the server
+const port = process.env.PORT;
+ZomatoApp.listen(port, () =>
+  ConnectDB().then(() => console.log(`Listening on port ${port}...`))
 );
-
-

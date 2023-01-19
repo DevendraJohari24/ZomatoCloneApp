@@ -1,27 +1,25 @@
-import mongoose from "mongoose";
+// Libraries
+import mongoose, { mongo } from "mongoose";
 
 const MenuSchema = new mongoose.Schema({
-    menus: [
+  menus: [
+    {
+      name: { type: String, required: true },
+      items: [
         {
-            name: {type: String, required: true},
-            items: [
-                {
-                    type: mongoose.Types.ObjectId,
-                    ref: 'Foods'
-                }
-            ],
-            recommended: [
-                {
-                    type: mongoose.Types.ObjectId,
-                    ref: 'Foods',
-                    unique: true
-                }
-            ]
-        }
-
-    ]
-},{
-    timestamps: true
+          type: mongoose.Types.ObjectId,
+          ref: "Foods",
+        },
+      ],
+    },
+  ],
+  recommended: [
+    {
+      type: mongoose.Types.ObjectId,
+      ref: "Foods",
+      unique: true,
+    },
+  ],
 });
 
-export const MenuModel = mongoose.model("Menus",MenuSchema);
+export const MenuModal = mongoose.model("Menu", MenuSchema);

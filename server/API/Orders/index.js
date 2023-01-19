@@ -1,60 +1,73 @@
-// Libraries
-import express from 'express';
+import express from "express";
 
-// Database Schema
-import { OrderModel } from '../../database/allModel';
+// Database Modals
+import { OrderModal } from "../../database/AllModals";
 
 const Router = express.Router();
 
-/*
-Route       /order/:_id
-Des         Get all orders based on id
-Access      Public
-Method      GET
-*/
+Router.get("/:userID", async (req, res) => {
+  try {
+    const { userID } = req.params;
 
-Router.get("/:_id", async(req, res)=>{
-    try{
-        const {_id} = req.params;
-        const getOrders = await OrderModel.findOne({user: _id});
-        
-        if(!getOrders){
-            return res.status(404).json({error: "User not found"});
-        }
+    const getOrders = await OrderModal.findOne({ user: userID });
 
-        return res.status(200).json({orders: getOrders});
-
-    }
-    catch(error){
-        return res.status(500).json({error: error.message});
-    }
+    return res.json({ orders: getOrders });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
 });
 
-/*
-Route ----> /order/new/:_id
-Des -------> Add new order
-Params      _id
-Method      POST
-*/
+Router.post("/new", async (req, res) => {
+  try {
+    const { orderData } = req.body;
+    const updateOrders = await OrderModal.findByIdAndUpdate(
+      orderData._id,
+      {
+        $push: { orderDetails: orderData.orderDetails },
+      },
+      { new: true }
+    );
+    
+    return res.json({ orders: updateOrders });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+});
 
-Router.post("/new/:_id", async (req, res) =>{
-    try{
-        const { _id } = req.params;
-        const {orderDetails} = req.body;
+Router.post("/review/new", async (req, res) => {
+  try {
+    const { orderData } = req.body;
+    const updateOrders = await OrderModal.findByIdAndUpdate(
+      orderData._id,
+      {
+        $set: { orderRating: orderData.orderRating },
+      },
+      { new: true }
+    );
+    return res.json({ orders: updateOrders });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+});
 
-        const addNewOrder = await OrderModel.findOneAndUpdate({
-            user: _id,
-        },{
-            $push: { orderDetails: orderDetails },
-        },{
-            new: true  // return object after updation
-        });
+Router.patch("/update", async (req, res) => {
+  try {
+    const { orderData } = req.body;
+    const updateOrders = await OrderModal.findOneAndUpdate(
+      {
+        _id: orderData._id,
+        "orderDetails._id": orderData.order_id,
+      },
+      {
+        $set: { "orderDetails.$.status": orderData.status },
+      },
+      { new: true }
+    );
 
-        return res.json({order: addNewOrder});
-    }
-    catch(error){
-        return res.status(500).json({error: error.message});
-    }
+    return res.json({ orders: updateOrders });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
 });
 
 export default Router;
